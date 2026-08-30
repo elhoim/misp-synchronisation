@@ -290,6 +290,12 @@ class TestSyncMethodsEnabled(unittest.TestCase):
         if not servers_id:
             raise Exception("No server configuration found for the source instance")
 
+        # Push the galaxy cluster to each linked server (a push all is needed for galaxy clusters)
+        for server_id in servers_id:
+            push_response = misps_site_admin[0].server_push(server=server_id)
+            time.sleep(2)
+            check_response(push_response)
+
         # Check for the presence of the galaxy cluster in all linked servers
         linked_server_numbers = extract_server_numbers(servers)
         for target_index in linked_server_numbers:
