@@ -445,6 +445,12 @@ class TestDistributionLevel(unittest.TestCase):
 
             linked_server_numbers = extract_server_numbers(servers)
 
+            # Push to all linked servers (a push all is needed for galaxies and clusters)
+            for server_id in servers_id:
+                push_response = misps_site_admin[0].server_push(server=server_id)
+                time.sleep(2)  # Allow time for push to complete
+                check_response(push_response)
+
             # Check propagation on each target server
             for target_index in linked_server_numbers:
                 target_instance = misps_site_admin[target_index - 1]
@@ -592,6 +598,12 @@ class TestDistributionLevel(unittest.TestCase):
                 raise Exception("No server configuration found for the source instance")
 
             linked_server_numbers = extract_server_numbers(servers)
+
+            # Push to all linked servers (a push all is needed for galaxies and clusters)
+            for server_id in servers_id:
+                push_response = misps_site_admin[0].server_push(server=server_id)
+                time.sleep(2)  # Allow time for push to complete
+                check_response(push_response)
 
             # Check galaxy distribution on remote instances
             for target_index in linked_server_numbers:
@@ -747,6 +759,12 @@ class TestDistributionLevel(unittest.TestCase):
         servers_id = get_servers_id(servers)
         if not servers_id:
             raise Exception("No server configuration found for the source instance")
+
+        # Push to all linked servers (a push all is needed for galaxies and clusters)
+        for server_id in servers_id:
+            push_response = misps_site_admin[0].server_push(server=server_id)
+            time.sleep(2)  # Allow time for push to complete
+            check_response(push_response)
 
         # Check for the presence of the galaxy cluster in all linked servers
         linked_server_numbers = extract_server_numbers(servers)
