@@ -468,6 +468,18 @@ create_sync_user() {
   echo "[✓] API key created and exported: SYNC_KEY_${source}_ON_${target}"
 }
 
+# is_internal_link: Return success when a link connects the two "internal" instances
+# The internal special-casing applies only to the pair (NUM_INSTANCES-1, NUM_INSTANCES),
+# so BOTH endpoints must belong to that pair.
+# Arguments:
+#   $1: Source instance index
+#   $2: Target instance index
+is_internal_link() {
+  [ "$INTERNAL_LAST_TWO" = "true" ] || return 1
+  { [ "$1" -eq "$((NUM_INSTANCES-1))" ] || [ "$1" -eq "$NUM_INSTANCES" ]; } &&
+  { [ "$2" -eq "$((NUM_INSTANCES-1))" ] || [ "$2" -eq "$NUM_INSTANCES" ]; }
+}
+
 # create_sync_server: Create a remote server entry for synchronization on a source instance pointing to a target instance
 # Arguments:
 #   $1: Source instance index
@@ -483,8 +495,11 @@ create_sync_server() {
   local org_id
   local internal_flag="false"
 
-  if [ $INTERNAL_LAST_TWO ]; then
+  if is_internal_link "$source" "$target"; then
     internal_flag="true"
+  fi
+
+  if [ $INTERNAL_LAST_TWO ]; then
     if [ "$target" -eq "$((NUM_INSTANCES-1))" ]; then
       org_id=$(get_org_id_on_instance "$target" "$target")
     elif [ "$target" -eq "$NUM_INSTANCES" ]; then
