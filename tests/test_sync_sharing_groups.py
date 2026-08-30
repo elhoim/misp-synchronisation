@@ -7,8 +7,9 @@ class TestSyncSharingGroups(unittest.TestCase):
         """
         Creates an event on the first instance with distribution set to 'Sharing Group',
         associates it with a sharing group shared only with the second organization.
-        After publishing, the event should only be present on the first server,
-        and absent from all others.
+        After publishing and pushing, the event must be present on the first instance
+        (its creator) and on the second one (the organisation the sharing group is
+        scoped to), and absent from all the other instances.
         """
 
         source_instance = misps_org_admin[0]
@@ -46,9 +47,14 @@ class TestSyncSharingGroups(unittest.TestCase):
             time.sleep(2)
             check_response(push_response)
 
-        # The event must be present on the first server
-        results_target = misps_site_admin[0].search(uuid=uuid_event)
-        self.assertGreater(len(results_target), 0, "The event is not present on the first server while it should be.")
+        # The event must be present on the first server (the one that created it)
+        results_source = misps_site_admin[0].search(uuid=uuid_event)
+        self.assertGreater(len(results_source), 0, "The event is not present on the first server while it should be.")
+
+        # The event must have been synchronised to the second instance, whose
+        # organisation is a member of the sharing group
+        results_target = target_instance.search(uuid=uuid_event)
+        self.assertGreater(len(results_target), 0, "The event is not present on the second server while the sharing group is shared with its organisation.")
 
         # The event must NOT be present on the other instances
         for idx, instance in enumerate(other_instances, start=3):
