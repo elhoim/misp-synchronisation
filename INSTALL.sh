@@ -486,7 +486,8 @@ create_sync_server() {
   if [ $INTERNAL_LAST_TWO ]; then
     internal_flag="true"
     if [ "$target" -eq "$((NUM_INSTANCES-1))" ]; then
-      org_id=$(get_org_id_on_instance "$target" "$target")
+      # remote_org_id must be the id ORG_$target has on the SOURCE instance
+      org_id=$(get_org_id_on_instance "$source" "$target")
     elif [ "$target" -eq "$NUM_INSTANCES" ]; then
       org_id=$(get_org_id_on_instance "$source" "$source")
     else
