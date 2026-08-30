@@ -36,7 +36,7 @@ done
 # Verify internal status for the last two instances
 INTERNAL_LAST_TWO=true
 for arg in "$@"; do
-    if [ "$arg" == "-no-internal" ]; then
+    if [ "$arg" == "--no-internal" ] || [ "$arg" == "-no-internal" ]; then
         INTERNAL_LAST_TWO=false
         break
     fi
@@ -324,7 +324,7 @@ set_host_org() {
   local id="$1"
   local org_id
 
-  if [ $INTERNAL_LAST_TWO ] && [ "$id" -eq "$NUM_INSTANCES" ]; then
+  if [ "$INTERNAL_LAST_TWO" == "true" ] && [ "$id" -eq "$NUM_INSTANCES" ]; then
     echo "[+] Getting ID of ORG_$((id-1)) on instance $id"
     org_id=$(curl -s -X GET "http://${HOSTS[$id]}/organisations/index.json" \
       -H "Authorization: ${AUTHS[$id]}" \
@@ -405,7 +405,7 @@ create_sync_user() {
 
   # Get org_id of ORG_source on target instance
   local org_id
-  if [ $INTERNAL_LAST_TWO ]; then
+  if [ "$INTERNAL_LAST_TWO" == "true" ]; then
     if [ "$target" -eq "$((NUM_INSTANCES-1))" ]; then
       org_id=$(get_org_id_on_instance "$target" "$target")
     elif [ "$target" -eq "$NUM_INSTANCES" ]; then
@@ -483,7 +483,7 @@ create_sync_server() {
   local org_id
   local internal_flag="false"
 
-  if [ $INTERNAL_LAST_TWO ]; then
+  if [ "$INTERNAL_LAST_TWO" == "true" ]; then
     internal_flag="true"
     if [ "$target" -eq "$((NUM_INSTANCES-1))" ]; then
       org_id=$(get_org_id_on_instance "$target" "$target")
