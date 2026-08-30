@@ -239,18 +239,34 @@ $COMPOSE_CMD up -d
 
 echo "[✓] Containers started. Processing initialization of each MISP instance (could take a few minutes depending on your system)"
 
+# Maximum time (in seconds) to wait for a single MISP instance to initialise.
+MISP_INIT_TIMEOUT="${MISP_INIT_TIMEOUT:-900}"
+
 # Wait for each MISP container to finish initialization
 for i in $(seq 1 "$NUM_INSTANCES"); do
-  container_name="misp-docker-misp_${i}-1"
-  echo -n "Waiting for full initialization of $container_name... "
-  while true; do
-    if docker logs "$container_name" 2>&1 | grep -q "INIT | Done"; then
-      echo "OK"
-      break
-    else
-      sleep 5
+  # Ask Compose itself for the container id: the generated container names differ
+  # between Compose v1 (misp-docker_misp_1_1) and v2 (misp-docker-misp_1-1), so
+  # they must never be hardcoded.
+  container_id=$($COMPOSE_CMD ps -q "misp_$i" 2>/dev/null) || container_id=""
+  if [[ -z "$container_id" ]]; then
+    echo "[!] No container found for service misp_$i (using '$COMPOSE_CMD')."
+    echo "[!] Check that '$COMPOSE_CMD up -d' succeeded: $COMPOSE_CMD ps"
+    exit 1
+  fi
+  echo -n "Waiting for full initialization of misp_$i ($container_id)... "
+  waited=0
+  while ! docker logs "$container_id" 2>&1 | grep -q "INIT | Done"; do
+    if (( waited >= MISP_INIT_TIMEOUT )); then
+      echo "TIMEOUT"
+      echo "[!] Instance misp_$i did not report 'INIT | Done' after ${MISP_INIT_TIMEOUT}s."
+      echo "[!] Inspect it with: docker logs $container_id"
+      echo "[!] Raise MISP_INIT_TIMEOUT if your system simply needs more time."
+      exit 1
     fi
+    sleep 5
+    waited=$((waited + 5))
   done
+  echo "OK"
 done
 
 # --- [4] API key reading and export ---
