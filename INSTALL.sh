@@ -392,6 +392,18 @@ set_redis_db_settings() {
     bash -c "cd /var/www/MISP && sudo -u www-data /var/www/MISP/app/Console/cake Admin setSetting 'SimpleBackgroundJobs.redis_database' $id"
 }
 
+# is_internal_link: Return success when a link connects the two internal instances
+# The internal special-casing applies only to the internal pair, which is the pair
+# (NUM_INSTANCES-1, NUM_INSTANCES). Both endpoints must be in that pair.
+# Arguments:
+#   $1: Source index
+#   $2: Target index
+is_internal_link() {
+  [ "$INTERNAL_LAST_TWO" = "true" ] || return 1
+  { [ "$1" -eq "$((NUM_INSTANCES-1))" ] || [ "$1" -eq "$NUM_INSTANCES" ]; } &&
+  { [ "$2" -eq "$((NUM_INSTANCES-1))" ] || [ "$2" -eq "$NUM_INSTANCES" ]; }
+}
+
 # create_sync_user: Create a synchronization user for an organisation on a target instance
 # Arguments:
 #   $1: Source organisation index
@@ -405,13 +417,11 @@ create_sync_user() {
 
   # Get org_id of ORG_source on target instance
   local org_id
-  if [ $INTERNAL_LAST_TWO ]; then
+  if is_internal_link "$source" "$target"; then
     if [ "$target" -eq "$((NUM_INSTANCES-1))" ]; then
       org_id=$(get_org_id_on_instance "$target" "$target")
-    elif [ "$target" -eq "$NUM_INSTANCES" ]; then
-      org_id=$(get_org_id_on_instance "$source" "$source")
     else
-      org_id=$(get_org_id_on_instance "$target" "$source")
+      org_id=$(get_org_id_on_instance "$source" "$source")
     fi
   else
     org_id=$(get_org_id_on_instance "$target" "$source")
