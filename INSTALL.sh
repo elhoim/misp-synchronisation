@@ -259,9 +259,33 @@ for i in $(seq 1 $NUM_INSTANCES); do
   HOSTS[$i]="localhost:808$i"
   echo "🔑 Reset admin credentials for instance $i..."
 
-  API_KEY=$(docker exec -i "misp-docker-misp_${i}-1" \
-    bash -c "cd /var/www/MISP && sudo -u www-data /var/www/MISP/app/Console/cake user change_authkey 1" \
-    | grep 'new key created' | awk -F': ' '{print $2}')
+  CAKE_CMD="cd /var/www/MISP && sudo -u www-data /var/www/MISP/app/Console/cake user change_authkey 1"
+  CONTAINER_NAME="misp-docker-misp_${i}-1"
+
+  # Capture the raw output first so a failing docker exec is not masked by the pipeline
+  if ! CAKE_OUTPUT=$(docker exec -i "$CONTAINER_NAME" bash -c "$CAKE_CMD" 2>&1); then
+    echo "[!] ERROR: failed to reset the admin API key on instance $i ($CONTAINER_NAME)."
+    echo "[!] Command: docker exec -i $CONTAINER_NAME bash -c '$CAKE_CMD'"
+    echo "[!] Output: $CAKE_OUTPUT"
+    exit 1
+  fi
+
+  API_KEY=$(printf '%s\n' "$CAKE_OUTPUT" | grep 'new key created' | awk -F': ' '{print $2}')
+
+  # Fail fast: an empty or malformed key would leave every later API call unauthenticated
+  if [[ -z "$API_KEY" ]]; then
+    echo "[!] ERROR: could not extract an API key for instance $i ($CONTAINER_NAME)."
+    echo "[!] Command: docker exec -i $CONTAINER_NAME bash -c '$CAKE_CMD'"
+    echo "[!] Expected a line matching 'new key created' in its output, got:"
+    echo "$CAKE_OUTPUT"
+    exit 1
+  fi
+
+  if [[ ! "$API_KEY" =~ ^[A-Za-z0-9]{32,}$ ]]; then
+    echo "[!] ERROR: extracted value for instance $i ($CONTAINER_NAME) is not a valid MISP API key: '$API_KEY'"
+    echo "[!] Command: docker exec -i $CONTAINER_NAME bash -c '$CAKE_CMD'"
+    exit 1
+  fi
 
   echo "Instance $i API Key: $API_KEY"
   AUTHS[$i]=$API_KEY
