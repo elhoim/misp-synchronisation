@@ -6,6 +6,17 @@ from pymisp import MISPGalaxy, MISPGalaxyCluster, MISPNote
 
 
 class TestDistributionLevel(unittest.TestCase):
+    def tearDown(self):
+        """
+        Purge events and blocklists on every instance after each test.
+
+        Running the cleanup here rather than at the end of each test method
+        guarantees it also happens when a test fails or raises, so a single
+        failure cannot leak events into the following tests.
+        """
+        for instance in misps_site_admin:
+            purge_events_and_blocklists(instance)
+
     def testEventDistributionLevelOnPush(self):
         """
         Explicitly tests the impact of the event distribution level on push synchronization between MISP instances.
@@ -112,9 +123,6 @@ class TestDistributionLevel(unittest.TestCase):
                 len(search_results), 0,
                 f"Event not found on MISP_{index} with distribution level 3"
             )
-        # Cleanup: delete all test events on all instances
-        for instance in misps_site_admin:
-            purge_events_and_blocklists(instance)
 
     def testEventDistributionLevelOnPull(self):
         """
@@ -213,10 +221,6 @@ class TestDistributionLevel(unittest.TestCase):
                 f"Event not found on MISP_{index} with distribution level 3"
             )
 
-        # Cleanup: delete all test events on all instances
-        for instance in misps_site_admin:
-            purge_events_and_blocklists(instance)
-
     def testEventDowngradeDistributionLevelOnPush(self):
         """ 
         Explicitly tests the impact of push synchronization on the downgrade of event distribution level.
@@ -292,9 +296,6 @@ class TestDistributionLevel(unittest.TestCase):
                 self.assertEqual(int(result['Event']['distribution']), 3,
                                  f"Event on MISP_{target_index} has incorrect distribution level {result['Event']['distribution']}")
                 
-        # Cleanup: delete all test events on all instances
-        for instance in misps_site_admin:
-            purge_events_and_blocklists(instance)
 
     def testEventDowngradeDistributionLevelOnPull(self):
         """ 
@@ -383,10 +384,6 @@ class TestDistributionLevel(unittest.TestCase):
                                     f"Event on MISP_{target_index} has incorrect distribution level {result['Event']['distribution']}")
 
         self.assertTrue(found, f"Event not found on MISP_{target_index} after pull with distribution level 3.")
-
-        # Cleanup: delete all test events on all instances
-        for instance in misps_site_admin:
-            purge_events_and_blocklists(instance)
 
 
     def testGalaxyDistributionLevelOnPush(self):
@@ -963,10 +960,6 @@ class TestDistributionLevel(unittest.TestCase):
             self.assertNotIn("Some analyst content dist 2", analyst_data_dist2, "Analyst data dist 2 should NOT be present on second-level target")
             self.assertIn("Some analyst content dist 3", analyst_data_dist2, "Analyst data dist 3 should be present on second-level target")
 
-        # Cleanup
-        for instance in misps_site_admin:
-            purge_events_and_blocklists(instance)
-
 
 
     def testAnalystDataDistributionLevelOnPull(self):
@@ -1016,10 +1009,6 @@ class TestDistributionLevel(unittest.TestCase):
         self.assertIn("Some analyst content dist 1", analyst_data_dist, "Analyst data dist 1 should be present on target")
         self.assertIn("Some analyst content dist 2", analyst_data_dist, "Analyst data dist 2 should be present on target")
         self.assertIn("Some analyst content dist 3", analyst_data_dist, "Analyst data dist 3 should be present on target")
-
-        # Cleanup
-        for instance in misps_site_admin:
-            purge_events_and_blocklists(instance)
 
 
     
@@ -1077,10 +1066,6 @@ class TestDistributionLevel(unittest.TestCase):
                     self.assertEqual(int(target_note.distribution), 3,
                                     f"Analyst data dist 3 should remain dist 3 on MISP_{target_index}")
 
-        # Cleanup
-        for instance in misps_site_admin:
-            purge_events_and_blocklists(instance)
-
 
 
     def testAnalystDataDowngradeDistributionLevelOnPull(self):
@@ -1135,9 +1120,5 @@ class TestDistributionLevel(unittest.TestCase):
             elif note.distribution == 3:
                 self.assertEqual(int(target_note.distribution), 3,
                                 f"Analyst data dist 3 should remain dist 3 on MISP_{target_index}")
-
-        # Cleanup
-        for instance in misps_site_admin:
-            purge_events_and_blocklists(instance)
 
 
