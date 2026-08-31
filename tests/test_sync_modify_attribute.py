@@ -401,7 +401,7 @@ class TestModifyAttribute(unittest.TestCase):
 
         # Perform the push operation again to propagate the updated proposals
         for server_id in servers_id:
-            push_response = source_instance.server_push(server=server_id)
+            push_response = misps_site_admin[0].server_push(server=server_id, event=event.id)
             time.sleep(2)  # Wait for the push operation to complete
             check_response(push_response)
 
@@ -504,7 +504,7 @@ class TestModifyAttribute(unittest.TestCase):
         time.sleep(2)
 
         # Perform the pull operation again to propagate the updated proposals
-        pull_result = target_instance.server_pull(server=server_id)
+        pull_result = misps_site_admin[target_index - 1].server_pull(server=server_id)
         time.sleep(2)  # Wait for the pull operation to complete
         check_response(pull_result)
 
