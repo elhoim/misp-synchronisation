@@ -76,6 +76,22 @@ class TestSyncForAllServers(unittest.TestCase):
                 print(f"Unidirectional link: {source_index} --> {target_index}")
 
                 # Determine correct source and target depending on link direction
+                # NOTE: the condition below is degenerate on both sides, and that is
+                # deliberate -- do not "simplify" it into an inversion.
+                #   * `source_index in source_links` asks whether this instance lists
+                #     ITSELF as a peer. INSTALL.sh only ever adds servers named
+                #     "MISP_<peer>" from topology.conf, which contains no self-entries,
+                #     so this is ALWAYS False.
+                #   * `source_index not in target_links` is ALWAYS True here, because
+                #     bidirectional links were already skipped just above.
+                # The else branch therefore ALWAYS fires: the swap is unconditional in
+                # practice. That is what makes the result correct -- after the swap the
+                # instance that actually holds the server config (the original source)
+                # becomes the pull executor, which matches MISP pull semantics.
+                # WARNING: do NOT rewrite this as `target_index in source_links`. That
+                # is always True (target_index is drawn from source_links), it would
+                # suppress the swap, and the server lookup below would then fail for
+                # every unidirectional link.
                 if source_index in source_links and source_index not in target_links:
                     # Normal direction
                     pass
