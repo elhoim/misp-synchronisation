@@ -51,7 +51,7 @@ class TestDistributionLevel(unittest.TestCase):
             search_results = target_instance.search(uuid=uuid)
             self.assertEqual(
                 len(search_results), 0,
-                f"Event unexpectedly found on MISP_{target_index} with distribution level 1"
+                f"Event unexpectedly found on MISP_{target_index} with distribution level 0"
             )
 
         # Now change the distribution level to 1 (This community only)
@@ -73,7 +73,7 @@ class TestDistributionLevel(unittest.TestCase):
             search_results = target_instance.search(uuid=uuid)
             self.assertEqual(
                 len(search_results), 0,
-                f"Event unexpectedly found on MISP_{target_index} with distribution level 2"
+                f"Event unexpectedly found on MISP_{target_index} with distribution level 1"
             )
 
         # Change the distribution level to 2 (Connected communities)
@@ -95,7 +95,7 @@ class TestDistributionLevel(unittest.TestCase):
             search_results = target_instance.search(uuid=uuid)
             self.assertGreater(
                 len(search_results), 0,
-                f"Event not found on MISP_{target_index} with distribution level 3"
+                f"Event not found on MISP_{target_index} with distribution level 2"
             )
 
         # Change the distribution level to 3 (All communities)
@@ -899,7 +899,8 @@ class TestDistributionLevel(unittest.TestCase):
             note.object_uuid = event.uuid
             note.note = f"Some analyst content dist {dist}"
             note.distribution = dist
-            source_instance.add_analyst_data(note, pythonify=True)
+            added = source_instance.add_analyst_data(note, pythonify=True)
+            check_response(added)
             notes.append(note)
 
         # Publish the event (which also publishes the analyst data)
@@ -989,7 +990,8 @@ class TestDistributionLevel(unittest.TestCase):
             note.object_uuid = event.uuid
             note.note = f"Some analyst content dist {dist}"
             note.distribution = dist
-            source_instance.add_analyst_data(note, pythonify=True)
+            added = source_instance.add_analyst_data(note, pythonify=True)
+            check_response(added)
             notes.append(note)
 
         # Publish the event and the analyst data

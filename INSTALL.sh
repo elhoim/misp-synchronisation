@@ -263,7 +263,7 @@ for i in $(seq 1 $NUM_INSTANCES); do
     bash -c "cd /var/www/MISP && sudo -u www-data /var/www/MISP/app/Console/cake user change_authkey 1" \
     | grep 'new key created' | awk -F': ' '{print $2}')
 
-  echo "Instance $i API Key: $API_KEY"
+  echo "Instance $i API Key: [REDACTED]"
   AUTHS[$i]=$API_KEY
   export HOST_$i="${HOSTS[$i]}"
   export AUTH_$i="${AUTHS[$i]}"
@@ -332,7 +332,7 @@ set_host_org() {
       -H "Content-Type: application/json" \
       | jq -r ".[] | select(.Organisation.name==\"ORG_$((id-1))\") | .Organisation.id")
     if [[ -z "$org_id" ]]; then
-      echo "[!] ERROR: Unable to find ID of ORG_$id on instance $id"
+      echo "[!] ERROR: Unable to find ID of ORG_$((id-1)) on instance $id"
       exit 1
     fi
   else
@@ -499,7 +499,7 @@ create_sync_server() {
   echo "[+] Creating remote server on instance $source pointing to instance $target"
   echo "MISP_${target}"
   echo "{ORG_UUIDS[target]}: ${ORG_UUIDS[$target]}"
-  echo "authkey: ${key}"
+  echo "authkey: [REDACTED]"
 
   local server_response
   server_response=$(curl -s -X POST "http://${source_host}/servers/add" \

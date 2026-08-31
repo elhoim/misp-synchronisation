@@ -2,7 +2,7 @@
 import os
 import uuid
 import re
-from typing import Union
+from typing import Optional, Union
 from pymisp import PyMISP, MISPEvent, ThreatLevel, Analysis, MISPAttribute
 from pymisp.api import get_uuid_or_id_from_abstract_misp
 
@@ -25,6 +25,13 @@ while True:
         i += 1
     else:
         break
+
+if not hosts:
+    raise RuntimeError(
+        "No MISP instance configured: the environment variables HOST_1, "
+        "AUTH_ADMIN_1 and AUTH_ORG_1 (and the following numbered triplets) "
+        "are unset. Source misp-docker/sync_vars.sh, or run INSTALL.sh first."
+    )
 
 # Create PyMISP connectors for each host/auth pair
 misps_site_admin = [PyMISP(host, auth, ssl=False) for host, auth in zip(hosts, auths_site_admin)]
@@ -154,11 +161,13 @@ def check_response(response):
     return response
 
 
-def request(pymisp: PyMISP, request_type: str, url: str, data: dict = {}) -> dict:
+def request(pymisp: PyMISP, request_type: str, url: str, data: Optional[dict] = None) -> dict:
     """
     Send a raw request to the MISP API using PyMISP internals.
     Returns the checked response.
     """
+    if data is None:
+        data = {}
     response = pymisp._prepare_request(request_type, url, data)
     return pymisp._check_response(response)
 

@@ -3,7 +3,7 @@ set -e
 
 # [1] Load exported environment variables
 if [ ! -f misp-docker/sync_vars.sh ]; then
-  echo "[!] sync_vars.sh file not found. Run script1.sh first."
+  echo "[!] sync_vars.sh file not found. Run INSTALL.sh first."
   exit 1
 fi
 
