@@ -662,9 +662,19 @@ $COMPOSE_CMD down
 sleep 5
 $COMPOSE_CMD up -d
 
-# Prompt user for cleanup option
-echo -e "\n[!] Enter 'r' to remove all containers and volumes, or any other key to exit without removal."
-read -r user_choice
+# Prompt user for cleanup option.
+# Only prompt when stdin is a terminal: in a non-interactive run (CI, cron, or
+# `./INSTALL.sh < /dev/null`) `read` hits EOF and returns 1, which under `set -e`
+# would abort the script with a non-zero status after a fully successful
+# deployment. The `|| user_choice=""` guard covers Ctrl-D at the prompt too.
+user_choice=""
+if [ -t 0 ]; then
+  echo -e "\n[!] Enter 'r' to remove all containers and volumes, or any other key to exit without removal."
+  read -r user_choice || user_choice=""
+else
+  echo "[*] Non-interactive run detected, keeping containers and volumes."
+fi
+
 if [ "$user_choice" = "r" ]; then
   $COMPOSE_CMD down -v
   echo "[✓] All containers and volumes have been removed."
