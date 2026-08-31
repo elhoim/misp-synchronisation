@@ -51,9 +51,9 @@ class TestLockedStatus(unittest.TestCase):
             target_instance.update_event(event_to_update, pythonify=True)
             # Ensure the event was not modified (should still have only one attribute)
             updated_event = target_instance.search(uuid=uuid)
-            self.assertNotEqual(
-                len(updated_event[0]['Event']['Attribute']), 2,
-                f"Event on MISP_{target_index} was modified despite being locked"
+            self.assertEqual(
+                len(updated_event[0]['Event']['Attribute']), 1,
+                f"Locked event on MISP_{target_index} must remain unmodified with exactly 1 attribute"
             )
 
         # Cleanup: remove all test events and blocklists from all instances
@@ -103,9 +103,9 @@ class TestLockedStatus(unittest.TestCase):
         target_instance.update_event(event_to_update, pythonify=True)
         # Ensure the event was not modified (should still have only one attribute)
         updated_event = target_instance.search(uuid=uuid)
-        self.assertNotEqual(
-            len(updated_event[0]['Event']['Attribute']), 2,
-            f"Event on MISP_{target_index} was modified despite being locked"
+        self.assertEqual(
+            len(updated_event[0]['Event']['Attribute']), 1,
+            f"Locked event on MISP_{target_index} must remain unmodified with exactly 1 attribute"
         )
 
         # Cleanup: remove all test events and blocklists from all instances
