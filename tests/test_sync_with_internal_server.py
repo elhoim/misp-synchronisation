@@ -474,7 +474,7 @@ class TestSyncWithInternalServer(unittest.TestCase):
             self.assertTrue(found, f"Local cluster {cluster.uuid} not found on MISP_{target_index}")
 
         # Cleanup: delete all test events on all instances
-        for instance in misps_org_admin:
+        for instance in misps_site_admin:
             purge_events_and_blocklists(instance)
 
 
@@ -574,6 +574,6 @@ class TestSyncWithInternalServer(unittest.TestCase):
             self.assertTrue(found, f"Local cluster {cluster.uuid} not found on MISP_{target_index}")
 
         # Cleanup: delete all test events on all instances
-        for instance in misps_org_admin:
+        for instance in misps_site_admin:
            purge_events_and_blocklists(instance)
         misps_site_admin[-1].delete_galaxy_cluster(cluster.uuid)
