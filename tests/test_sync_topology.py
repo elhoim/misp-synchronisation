@@ -1,6 +1,6 @@
 import unittest
 import time
-from common import misps_site_admin, misps_org_admin, create_event, publish_immediately, check_response, get_servers_id, extract_server_numbers, purge_events_and_blocklists
+from common import misps_site_admin, misps_org_admin, create_event, publish_immediately, check_response, get_servers_id, extract_server_number, extract_server_numbers, purge_events_and_blocklists
 
 
 
@@ -89,8 +89,7 @@ class TestSyncForAllServers(unittest.TestCase):
                 target_servers = misps_site_admin[target_index - 1].servers()
                 server_id = None
                 for server in target_servers:
-                    name = server['Server']['name']
-                    if str(source_index) in name:
+                    if extract_server_number(server) == source_index:
                         server_id = server['Server']['id']
                         break
 

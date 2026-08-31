@@ -61,6 +61,17 @@ def create_attribute(category: str, value: str):
     attribute.uuid = attribute_uuid
     return attribute
 
+def extract_server_number(server):
+    """
+    Extract the instance number from a single server entry.
+    Assumes the server name ends with the instance number (e.g., 'MISP_3').
+    Returns an integer, or None if the name has no trailing number.
+    """
+    match = re.search(r'\d+$', server['Server']['name'])
+    if match:
+        return int(match.group())
+    return None
+
 def extract_server_numbers(servers):
     """
     Extract server numbers from the server names.
@@ -69,10 +80,9 @@ def extract_server_numbers(servers):
     """
     numbers = []
     for server in servers:
-        name = server['Server']['name']
-        match = re.search(r'\d+$', name)
-        if match:
-            numbers.append(int(match.group()))
+        number = extract_server_number(server)
+        if number is not None:
+            numbers.append(number)
     return numbers
 
 def get_servers_id(servers):
@@ -115,7 +125,7 @@ def find_unidirectional_link():
             # Trouver l'ID du serveur sur la cible qui pointe vers la source
             server_id = None
             for server in misps_site_admin[target_index - 1].servers():
-                if str(source_index) in server['Server']['name']:
+                if extract_server_number(server) == source_index:
                     server_id = server['Server']['id']
                     break
 
