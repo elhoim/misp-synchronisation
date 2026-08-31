@@ -3,7 +3,7 @@ import os
 import uuid
 import re
 from typing import Union
-from pymisp import PyMISP, MISPEvent, ThreatLevel, Analysis, MISPAttribute
+from pymisp import PyMISP, MISPEvent, ThreatLevel, Analysis, MISPAttribute, MISPGalaxy
 from pymisp.api import get_uuid_or_id_from_abstract_misp
 
 
@@ -125,6 +125,25 @@ def find_unidirectional_link():
             return source_instance, target_instance, source_index, target_index, server_id
 
     raise Exception("No unidirectional connection found between any instances.")
+
+def get_galaxy_by_name(instance, name: str) -> MISPGalaxy:
+    """
+    Look up a galaxy by its exact name on the given MISP instance.
+
+    Tests must not rely on ``instance.galaxies(pythonify=True)[-1]``: no test ever
+    deletes a galaxy, so the galaxy list keeps growing across runs and the "last
+    element" is not necessarily the galaxy the test just created.
+
+    Several tests create galaxies sharing the same name (on the same instance, or
+    over successive runs against a persistent topology), so the most recently
+    created match - the highest galaxy id - is returned.
+
+    Raises an exception if no galaxy with that name exists.
+    """
+    matches = [galaxy for galaxy in instance.galaxies(pythonify=True) if galaxy.name == name]
+    if not matches:
+        raise Exception(f"No galaxy named {name!r} found on instance {instance.root_url}")
+    return max(matches, key=lambda galaxy: int(galaxy.id))
 
 def purge_events_and_blocklists(instance):
     """

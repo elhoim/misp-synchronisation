@@ -1,7 +1,7 @@
 import unittest
 import time
 import uuid as UUID
-from common import misps_site_admin, misps_org_admin, create_event, publish_immediately, check_response, get_servers_id, extract_server_numbers, purge_events_and_blocklists
+from common import misps_site_admin, misps_org_admin, create_event, publish_immediately, check_response, get_servers_id, extract_server_numbers, purge_events_and_blocklists, get_galaxy_by_name
 from pymisp import MISPTag, MISPGalaxy, MISPGalaxyCluster
 
 class TestSyncWithInternalServer(unittest.TestCase):
@@ -425,7 +425,7 @@ class TestSyncWithInternalServer(unittest.TestCase):
                 'description': 'testLocalGalaxyClusterPropagationOnPush'
             }
         ))
-        new_galaxy = source_instance.galaxies(pythonify=True)[-1]
+        new_galaxy = get_galaxy_by_name(source_instance, 'Galaxy for Push')
 
         # Create a galaxy cluster
         new_uuid = str(UUID.uuid4())
@@ -441,11 +441,9 @@ class TestSyncWithInternalServer(unittest.TestCase):
         source_instance.publish_galaxy_cluster(new_uuid)
         time.sleep(2)
 
-        # Retrieve a cluster from the first available galaxy
-        galaxies: list[MISPGalaxy] = source_instance.galaxies(pythonify=True)
-        self.assertGreater(len(galaxies), 0, "No galaxy available")
-        galaxy: MISPGalaxy = galaxies[-1]
-        galaxy = source_instance.get_galaxy(galaxy.id, withCluster=True, pythonify=True)
+        # Retrieve a cluster from the galaxy created above
+        galaxy: MISPGalaxy = source_instance.get_galaxy(new_galaxy.id, withCluster=True, pythonify=True)
+        self.assertTrue(galaxy.clusters, "No cluster available in the created galaxy")
         cluster: MISPGalaxyCluster = galaxy.clusters[0]
 
         # Attach the cluster as a local tag to the event
@@ -519,7 +517,7 @@ class TestSyncWithInternalServer(unittest.TestCase):
                 'description': 'testLocalGalaxyClusterPropagationOnPull'
             }
         ))
-        new_galaxy = source_instance.galaxies(pythonify=True)[-1]
+        new_galaxy = get_galaxy_by_name(source_instance, 'Galaxy for Pull')
 
         # Create a galaxy cluster
         new_uuid = str(UUID.uuid4())
@@ -535,11 +533,9 @@ class TestSyncWithInternalServer(unittest.TestCase):
         source_instance.publish_galaxy_cluster(new_uuid)
         time.sleep(2)
 
-        # Retrieve a cluster from the first available galaxy
-        galaxies: list[MISPGalaxy] = source_instance.galaxies(pythonify=True)
-        self.assertGreater(len(galaxies), 0, "No galaxy available")
-        galaxy: MISPGalaxy = galaxies[-1]
-        galaxy = source_instance.get_galaxy(galaxy.id, withCluster=True, pythonify=True)
+        # Retrieve a cluster from the galaxy created above
+        galaxy: MISPGalaxy = source_instance.get_galaxy(new_galaxy.id, withCluster=True, pythonify=True)
+        self.assertTrue(galaxy.clusters, "No cluster available in the created galaxy")
         cluster: MISPGalaxyCluster = galaxy.clusters[0]
 
         # Attach the cluster as a local tag to the event

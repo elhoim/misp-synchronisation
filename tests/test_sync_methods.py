@@ -1,7 +1,7 @@
 import unittest
 import time
 import uuid as UUID
-from common import misps_site_admin, misps_org_admin, create_event, publish_immediately, request, check_response, get_servers_id, extract_server_numbers, find_unidirectional_link, purge_events_and_blocklists
+from common import misps_site_admin, misps_org_admin, create_event, publish_immediately, request, check_response, get_servers_id, extract_server_numbers, find_unidirectional_link, purge_events_and_blocklists, get_galaxy_by_name
 from pymisp import PyMISP, MISPSighting, MISPNote, MISPGalaxy, MISPGalaxyCluster
 from pymisp.api import get_uuid_or_id_from_abstract_misp
 
@@ -264,7 +264,7 @@ class TestSyncMethodsEnabled(unittest.TestCase):
                 'description': 'testSyncGalaxyClusterOnPush'
             }
         ))
-        new_galaxy = source_instance.galaxies(pythonify=True)[-1]
+        new_galaxy = get_galaxy_by_name(source_instance, 'Galaxy for Push')
 
         # Create a galaxy cluster
         new_uuid = str(UUID.uuid4())
@@ -336,7 +336,7 @@ class TestSyncMethodsEnabled(unittest.TestCase):
                 'description': 'testSyncGalaxyClusterOnPull'
             }
         ))
-        new_galaxy = source_instance.galaxies(pythonify=True)[-1]
+        new_galaxy = get_galaxy_by_name(source_instance, 'Galaxy for Pull')
 
         # Create a galaxy cluster
         new_uuid = str(UUID.uuid4())

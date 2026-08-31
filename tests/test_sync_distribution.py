@@ -1,7 +1,7 @@
 import unittest
 import time
 import uuid as UUID
-from common import misps_site_admin, misps_org_admin, create_event, publish_immediately, check_response, get_servers_id, extract_server_numbers, find_unidirectional_link, purge_events_and_blocklists
+from common import misps_site_admin, misps_org_admin, create_event, publish_immediately, check_response, get_servers_id, extract_server_numbers, find_unidirectional_link, purge_events_and_blocklists, get_galaxy_by_name
 from pymisp import MISPGalaxy, MISPGalaxyCluster, MISPNote
 
 
@@ -417,7 +417,7 @@ class TestDistributionLevel(unittest.TestCase):
                     'description': f'Testing galaxy distribution level {galaxy_dist}'
                 }
             ))
-            new_galaxy = source_instance.galaxies(pythonify=True)[-1]
+            new_galaxy = get_galaxy_by_name(source_instance, galaxy_name)
 
             # Create 4 clusters with distribution levels 0,1,2,3
             cluster_uuids = {}
@@ -496,7 +496,7 @@ class TestDistributionLevel(unittest.TestCase):
                     'description': f'Testing galaxy distribution level {galaxy_dist}'
                 }
             ))
-            new_galaxy = source_instance.galaxies(pythonify=True)[-1]
+            new_galaxy = get_galaxy_by_name(source_instance, galaxy_name)
 
             # Create 4 clusters with distribution levels 0,1,2,3
             cluster_uuids = {}
@@ -569,7 +569,7 @@ class TestDistributionLevel(unittest.TestCase):
                     'description': f'Test downgrade of galaxy dist {galaxy_dist}'
                 }
             ))
-            new_galaxy = source_instance.galaxies(pythonify=True)[-1]
+            new_galaxy = get_galaxy_by_name(source_instance, galaxy_name)
 
             # Create cluster with distribution=2
             cluster_uuid = str(UUID.uuid4())
@@ -644,7 +644,7 @@ class TestDistributionLevel(unittest.TestCase):
                     'description': f'Test downgrade of galaxy dist {galaxy_dist}'
                 }
             ))
-            new_galaxy = source_instance.galaxies(pythonify=True)[-1]
+            new_galaxy = get_galaxy_by_name(source_instance, galaxy_name)
 
             # Create cluster with distribution=2
             cluster_uuid = str(UUID.uuid4())
@@ -712,7 +712,7 @@ class TestDistributionLevel(unittest.TestCase):
                 'description': 'testGalaxyClusterDowngradeDistributionOnPush'
             }
         ))
-        new_galaxy = source_instance.galaxies(pythonify=True)[-1]
+        new_galaxy = get_galaxy_by_name(source_instance, 'Galaxy for Push')
 
         # Create a galaxy cluster with distribution 2
         first_uuid = str(UUID.uuid4())
@@ -794,7 +794,7 @@ class TestDistributionLevel(unittest.TestCase):
                 'description': 'testGalaxyClusterDowngradeDistributionOnPull'
             }
         ))
-        new_galaxy = source_instance.galaxies(pythonify=True)[-1]
+        new_galaxy = get_galaxy_by_name(source_instance, 'Galaxy for Pull')
 
         # Create a galaxy cluster with distribution 1
         first_uuid = str(UUID.uuid4())
