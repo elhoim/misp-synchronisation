@@ -520,6 +520,19 @@ create_sync_server() {
       \"pull_analyst_data\": true,
       \"internal\": ${internal_flag}
     }")
+
+  local server_id
+  server_id=$(echo "$server_response" | jq -r '.Server.id' 2>/dev/null)
+
+  if [[ -z "$server_id" || "$server_id" == "null" ]]; then
+    local server_error
+    server_error=$(echo "$server_response" | jq -r '(.errors // .message // .) | if type == "string" then . else tojson end' 2>/dev/null)
+    echo "[!] ERROR: Failed to create remote server MISP_${target} on instance $source (source instance $source -> target instance $target)"
+    echo "[!] Server response: ${server_error:-${server_response:-(empty response)}}"
+    exit 1
+  fi
+
+  echo "[✓] Remote server MISP_${target} created on instance $source (ID=$server_id)"
 }
 
 # create_sharing_group: Create a sharing group on instance 1
