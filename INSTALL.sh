@@ -27,6 +27,36 @@ if [[ -z "$NUM_INSTANCES" ]]; then
 fi
 echo "Number of instances: $NUM_INSTANCES"
 
+# Port scheme and Redis database budget.
+#
+# Instance $i is published on HTTP_PORT_BASE+$i and HTTPS_PORT_BASE+$i. The
+# additive form keeps the ports valid for any supported instance count (the
+# former "808$i" / "844$i" string concatenation produced the invalid port
+# 80810 from instance 10 on).
+#
+# Each instance also consumes two Redis databases on the shared redis service:
+#   SimpleBackgroundJobs.redis_database = $id                  (1 .. N)
+#   MISP.redis_database                 = $NUM_INSTANCES + $id (N+1 .. 2N)
+# Redis ships with 16 databases (0-15), so 2 * NUM_INSTANCES must stay <= 15.
+HTTP_PORT_BASE=8080
+HTTPS_PORT_BASE=8440
+REDIS_DATABASES=16
+MAX_INSTANCES=$(( (REDIS_DATABASES - 1) / 2 ))
+
+if (( NUM_INSTANCES > MAX_INSTANCES )); then
+  echo "[!] $CONFIG_FILE defines $NUM_INSTANCES instances, but at most $MAX_INSTANCES are supported."
+  echo "[!] Each instance uses two of the $REDIS_DATABASES Redis databases (0-$((REDIS_DATABASES - 1)))"
+  echo "[!] that the bundled redis service provides: id and NUM_INSTANCES+id."
+  echo "[!] With $NUM_INSTANCES instances, MISP.redis_database would reach $((2 * NUM_INSTANCES)), which does not exist."
+  echo "[!] Reduce the topology to $MAX_INSTANCES instances or fewer."
+  exit 1
+fi
+
+if (( HTTPS_PORT_BASE + NUM_INSTANCES > 65535 )); then
+  echo "[!] The port scheme (HTTP $((HTTP_PORT_BASE + 1))+, HTTPS $((HTTPS_PORT_BASE + 1))+) does not fit $NUM_INSTANCES instances."
+  exit 1
+fi
+
 echo -e "[+] CONNECTION_SCHEMA loaded from config"
 for key in $(printf "%s\n" "${!CONNECTION_SCHEMA[@]}" | sort -n); do
   echo "Instance $key ↔️  ${CONNECTION_SCHEMA[$key]}"
@@ -183,8 +213,8 @@ cat >> docker-compose.yml <<EOF
       start_period: 30s
       start_interval: 30s
     ports:
-      - "808$i:80"
-      - "844$i:443"
+      - "$((HTTP_PORT_BASE + i)):80"
+      - "$((HTTPS_PORT_BASE + i)):443"
     volumes:
       - "./instance-$i/instance-config/:/var/www/MISP/app/Config/"
       - "./instance-$i/instance-log/:/var/www/MISP/app/tmp/logs/"
@@ -192,7 +222,7 @@ cat >> docker-compose.yml <<EOF
       - "./instance-$i/instance-ssl/:/etc/nginx/certs/"
       - "./instance-$i/instance-gnupg/:/var/www/MISP/.gnupg/"
     environment:
-      - "BASE_URL=http://localhost:808$i"
+      - "BASE_URL=http://localhost:$((HTTP_PORT_BASE + i))"
       - "CRON_USER_ID=\${CRON_USER_ID}"
       - "CRON_PULLALL=\${CRON_PULLALL}"
       - "CRON_PUSHALL=\${CRON_PUSHALL}"
@@ -256,7 +286,7 @@ done
 # --- [4] API key reading and export ---
 # Reset admin API keys automatically for each instance
 for i in $(seq 1 $NUM_INSTANCES); do
-  HOSTS[$i]="localhost:808$i"
+  HOSTS[$i]="localhost:$((HTTP_PORT_BASE + i))"
   echo "🔑 Reset admin credentials for instance $i..."
 
   API_KEY=$(docker exec -i "misp-docker-misp_${i}-1" \
